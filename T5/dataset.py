@@ -139,10 +139,10 @@ class dataset_process_inf(Dataset):
             padding="max_length",
             return_tensors="pt",
         )
-        
+
         source_ids = source["input_ids"].squeeze()
         source_mask = source["attention_mask"].squeeze()
-        
+
         return {
             "source_ids": source_ids.to(dtype=torch.long),
             "source_mask": source_mask.to(dtype=torch.long),

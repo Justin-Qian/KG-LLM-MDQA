@@ -7,4 +7,3 @@ This repository includes the data we need to prepare for running for results in 
 * **dpr_context.json**: retrieved supporting facts for testing questions by DPR, obtained from **step 3 DPR retrieval** in the main work flow.
 * **mdr_context.json**: retrieved supporting facts for testing questions by MDR, obtained from **step 4 MDR retrieval** in the main work flow.
 * **test_docs_emb.pkl**: the embeddings for each passage from the set of documents for each testing question, obtained by sentence transformer by running knn_emb.py in **step 7**
-

@@ -5,12 +5,12 @@ import spacy
 import requests
 import json
 
-nlp = spacy.load('en_core_web_lg')
+# nlp = spacy.load('en_core_web_lg')
 
 
 def tf_idf(seed, candidates_idx, corpus, k, visited):
     vectorizer = TfidfVectorizer()
-    
+
     try:
         tfidf_matrix = vectorizer.fit_transform([corpus[_] for _ in candidates_idx])
 
@@ -22,7 +22,7 @@ def tf_idf(seed, candidates_idx, corpus, k, visited):
         for idx in idxs:
             if candidates_idx[idx] not in visited:
                 tmp_idxs.append(candidates_idx[idx])
-            
+
             k -= 1
 
             if k == 0:
@@ -37,7 +37,7 @@ def tf_idf(seed, candidates_idx, corpus, k, visited):
 def tf_idf2(question, corpus, corpus_idx, k):
     sub_corpus = [corpus[_] for _ in corpus_idx]
     vectorizer = TfidfVectorizer()
-    
+
     try:
         tfidf_matrix = vectorizer.fit_transform(sub_corpus)
 
@@ -46,21 +46,21 @@ def tf_idf2(question, corpus, corpus_idx, k):
         idxs = cosine_sim.argsort()[::-1][:k]
 
         return [sub_corpus[_] for _ in idxs]
-    
+
     except Exception as e:
         return []
 
 
-def get_encoder(encoder_type):
-    return SentenceTransformer(encoder_type)
+# def get_encoder(encoder_type):
+#     return SentenceTransformer(encoder_type)
 
 
-def strip_string(string, only_stopwords = False):
-    if only_stopwords:
-        return ' '.join([str(t) for t in nlp(string) if not t.is_stop])
-    else:
-        return ' '.join([str(t) for t in nlp(string) if t.pos_ in ['NOUN', 'PROPN']])
-    
+# def strip_string(string, only_stopwords = False):
+#     if only_stopwords:
+#         return ' '.join([str(t) for t in nlp(string) if not t.is_stop])
+#     else:
+#         return ' '.join([str(t) for t in nlp(string) if t.pos_ in ['NOUN', 'PROPN']])
+
 
 def window_encodings(sentence, window_size, overlap):
     """Compute encodings for a string by splitting it into windows of size window_size with overlap"""
@@ -68,7 +68,7 @@ def window_encodings(sentence, window_size, overlap):
 
     if len(tokens) <= window_size:
         return [sentence]
-    
+
     return [' '.join(tokens[i:i + window_size]) for i in range(0, len(tokens) - window_size, overlap)]
 
 

@@ -48,7 +48,7 @@ def run(train_data, val_data, model, tokenizer, args):
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
 
     best_loss = math.inf
-    
+
     for epoch in range(args.train_epochs):
         loss = train(epoch, tokenizer, model, train_loader, optimizer)
 
@@ -62,7 +62,7 @@ def run(train_data, val_data, model, tokenizer, args):
 
         if epoch % args.val_epochs == 0:
             predictions, labels, questions = eval(tokenizer, model, val_loader)
-    
+
     final_df = pd.DataFrame({'Questions': questions, "Generated Text": predictions, "Actual Text": labels})
 
     final_df.to_csv("./res/{}_{}/predictions.csv".format(args.dataset, args.model))
@@ -82,12 +82,12 @@ if __name__ == "__main__":
     n_gpu = torch.cuda.device_count()
 
     seed_everything(args.seed)
-    train_data, val_data = load_dataset(args) 
+    train_data, val_data = load_dataset(args)
 
     # for inference
     # tokenizer = T5Tokenizer.from_pretrained("./model/{}".format(args.dataset))
     # model = T5ForConditionalGeneration.from_pretrained("./model/{}".format(args.dataset))
-    
+
     # for training
     tokenizer = T5Tokenizer.from_pretrained(args.model)
     model = T5ForConditionalGeneration.from_pretrained(args.model).cuda()

@@ -19,15 +19,6 @@ def run(i_d, retriever, prompt_qa, prompt_eval, llm, args):
     if args.retriever in ['KGP w/o LLM', 'KGP-T5', 'KGP-LLaMA']:
         i, d, G = i_d
         corpus, t1, t2, t3 = retriever.retrieve(d, G)
-    else:
-        i, d = i_d
-
-        if args.retriever in ['MDR', 'DPR']:
-            corpus = retriever.retrieve(d, i)
-            t1, t2, t3 = None, None, None
-        else:
-            corpus = retriever.retrieve(d)
-            t1, t2, t3 = None, None, None
 
     if corpus == None:
         return i, d['question'], d['answer'], 'System mistake', None, None, None, corpus, d['supports'], t1, t2, t3
@@ -71,63 +62,13 @@ if __name__ == '__main__':
 
     data_idx = [(i, d) for i, d in enumerate(data)]
 
-    if args.retriever in ['Golden', 'No',
-                          'BM25', 'TF-IDF', 'KNN',
-                          'MDR', 'DPR',
-                          'KGP w/o LLM', 'LLaMA', 'T5',
-                          'KGP-T5', 'KGP-LLaMA']:
-        prompt_qa = prompt_qac_wiki
-    elif args.retriever == 'No':
-        prompt_qa = prompt_qa_wiki
+    prompt_qa = prompt_qac_wiki
 
-
-
-    if args.retriever == 'Golden':
-        retriever = Golden_retriever(args.k)
-
-    elif args.retriever == 'No':
-        retriever = No_retriever(args.k)
-
-    elif args.retriever == 'BM25':
-        retriever = BM25_retriever(args.k)
-
-    elif args.retriever == 'TF-IDF':
-        retriever = TF_IDF_retriever(args.k)
-
-    elif args.retriever == 'KNN':
-        retriever = KNN_retrieval(args.text_encoder, args.k, args.k_emb)
-        args.run_info = f'{args.retriever}_{args.k_emb}_{args.k}'
-        data = pkl.load(open('./dataset/{}/test_docs_emb.pkl'.format(args.dataset), 'rb'))
-        data_idx = [(i, d) for i, d in enumerate(data)]
-
-    elif args.retriever == 'LLaMA':
-        retriever = llm_retriever_LLaMA(args.k, args.k_nei, args.port)
-
-    elif args.retriever == 'T5':
+    if args.retriever == 'T5':
         retriever = llm_retriever_T5(args.k, args.k_nei, args.port)
-
-    elif args.retriever == 'MDR':
-        corpus = json.load(open('./dataset/{}/MDR_context.json'.format(args.dataset), 'r'))
-        retriever = MDR_retrieval(corpus)
-
-    elif args.retriever == 'DPR':
-        corpus = json.load(open('./dataset/{}/DPR_context.json'.format(args.dataset), 'r'))
-        retriever = DPR_retrieval(corpus)
-
-    elif args.retriever == 'KGP w/o LLM':
-        retriever = KG_retriever(args.k)
-        Gs = pkl.load(open('./dataset/{}/{}.pkl'.format(args.dataset, args.kg), 'rb'))
-        data_idx = [(i, d, Gs[i]) for i, d in enumerate(data)]
-        args.run_info = f'{args.retriever}_{args.kg}_{args.k}'
 
     elif args.retriever == 'KGP-T5':
         retriever = llm_retriever_KG_T5(args.k, args.k_nei, args.port)
-        Gs = pkl.load(open('./dataset/{}/{}.pkl'.format(args.dataset, args.kg), 'rb'))
-        data_idx = [(i, d, Gs[i]) for i, d in enumerate(data)]
-        args.run_info = f'{args.retriever}_{args.kg}_{args.k}'
-
-    elif args.retriever == 'KGP-LLaMA':
-        retriever = llm_retriever_KG_LLaMA(args.k, args.k_nei)
         Gs = pkl.load(open('./dataset/{}/{}.pkl'.format(args.dataset, args.kg), 'rb'))
         data_idx = [(i, d, Gs[i]) for i, d in enumerate(data)]
         args.run_info = f'{args.retriever}_{args.kg}_{args.k}'

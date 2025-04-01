@@ -17,15 +17,15 @@ import time
 class No_retriever(object):
     def __init__(self, k):
         self.k = k
-    
+
     def retrieve(self, data):
         return []
-    
+
 
 class Golden_retriever(object):
     def __init__(self, k):
         self.k = k
-    
+
     def retrieve(self, data):
         return [c for _, c in data['supports']]
 
@@ -35,20 +35,20 @@ class KNN_retrieval(object):
         self.encoder = get_encoder(text_encoder)
         self.k_emb = k_emb
         self.k = k
-        
+
     def index(self, data):
         self.strip_chunks = data['strip_chunks']
         self.group_idx = np.array(data['group_idx'])
         self.chunks = data['chunks']
         self.np_chunks = np.array(self.chunks)
         self.chunk_embeds = data['chunk_embeds']
-    
+
     def query_encode(self, query):
         return self.encoder.encode([strip_string(query)])
-    
+
     def retrieve(self, data):
         self.index(data)
-        
+
         query_embed = self.query_encode(data['question'])
 
         #Search by embedding similarity
@@ -67,12 +67,12 @@ class KNN_retrieval(object):
                     break
 
         return [data['title_chunks'][_][1] for _ in topk]
-    
+
 
 class MDR_retrieval(object):
     def __init__(self, corpus):
         self.corpus = corpus
-    
+
     def retrieve(self, data, i):
         return self.corpus[i]
 
@@ -80,7 +80,7 @@ class MDR_retrieval(object):
 class DPR_retrieval(object):
     def __init__(self, corpus):
         self.corpus = corpus
-    
+
     def retrieve(self, data, i):
         corpus = self.corpus[i]
 
@@ -91,7 +91,7 @@ class TF_IDF_retriever(object):
     def __init__(self, k):
         self.vectorizer = TfidfVectorizer()
         self.k = k
-    
+
     def retrieve(self, data):
         corpus = [c for _, c in data['title_chunks']]
         tfidf_matrix = self.vectorizer.fit_transform(corpus)
@@ -105,7 +105,7 @@ class TF_IDF_retriever(object):
 class BM25_retriever(object):
     def __init__(self, k):
         self.k = k
-    
+
     def retrieve(self, data):
         corpus = [c for _, c in data['title_chunks']]
         self.bm25 = BM25Okapi([c.split(" ") for c in corpus])
@@ -113,12 +113,12 @@ class BM25_retriever(object):
         scores = self.bm25.get_scores(data['question'].split(" "))
 
         return [corpus[idx] for idx in scores.argsort()[-self.k:][::-1]]
-    
+
 
 class KG_retriever(object):
     def __init__(self, k):
         self.k = k
-    
+
     def retrieve(self, data, G):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
@@ -132,7 +132,7 @@ class KG_retriever(object):
         while len(retrieve_idxs) < self.k:
             idxs = tf_idf(seed, candidates_idx, corpus, k = retrieve_num[count], visited = retrieve_idxs)
             retrieve_idxs.extend(idxs[:max(0, self.k - len(retrieve_idxs))])
-            
+
             candidates_idx = set(chain(*[list(G.neighbors(node)) for node in idxs]))
             candidates_idx = list(candidates_idx.difference(retrieve_idxs))
 
@@ -140,7 +140,7 @@ class KG_retriever(object):
                 break
             else:
                 prev_length = len(retrieve_idxs)
-            
+
             count += 1
 
         return [corpus[idx] for idx in retrieve_idxs], None, None, None
@@ -151,14 +151,14 @@ class llm_retriever_LLaMA(object):
         self.k = k
         self.k_nei = k_nei
         self.port = port
-    
+
     def retrieve(self, data):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
 
         seed = data['question']
         contexts = []
-        
+
         idxs = tf_idf(seed, candidates_idx, corpus, k = self.k//self.k_nei, visited = [])
 
         for idx in idxs:
@@ -174,21 +174,21 @@ class llm_retriever_LLaMA(object):
                 contexts.append(corpus[idx])
 
         return contexts
-    
+
 
 class llm_retriever_T5(object):
     def __init__(self, k, k_nei, port):
         self.k = k
         self.k_nei = k_nei
         self.port = port
-    
+
     def retrieve(self, data):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
 
         seed = data['question']
         contexts = []
-        
+
         idxs = tf_idf(seed, candidates_idx, corpus, k = self.k//self.k_nei, visited = [])
 
         cur_contexts = [seed + ' ' + corpus[_] for _ in idxs]
@@ -203,21 +203,21 @@ class llm_retriever_T5(object):
                 contexts.append(corpus[idx])
 
         return contexts
-    
+
 
 class llm_retriever_KG_T5(object):
     def __init__(self, k, k_nei, port):
         self.k = k
         self.k_nei = k_nei
         self.port = port
-    
+
     def retrieve(self, data, G):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
 
         seed = data['question']
         contexts = []
-        
+
         start = time.time()
         idxs = tf_idf(seed, candidates_idx, corpus, k = self.k//self.k_nei, visited = [])
         t1 = time.time() - start
@@ -241,21 +241,21 @@ class llm_retriever_KG_T5(object):
         t3 = time.time() - start
 
         return contexts, t1, t2, t3
-    
+
 
 class llm_retriever_KG_LLaMA(object):
     def __init__(self, k, k_nei, port):
         self.k = k
         self.k_nei = k_nei
         self.port = port
-    
+
     def retrieve(self, data, G):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
 
         seed = data['question']
         contexts = []
-        
+
         idxs = tf_idf(seed, candidates_idx, corpus, k = self.k//self.k_nei, visited = [])
 
         for idx in idxs:
@@ -273,14 +273,14 @@ class llm_retriever_KG_LLaMA(object):
                 contexts.append(corpus[idx])
 
         return contexts
-    
+
 
 
 class llm_retriever_il(object):
     def __init__(self, k, llm):
         self.k = k
         self.llm = llm
-    
+
     def retrieve(self, data):
         corpus = [c for _, c in data['title_chunks']]
         candidates_idx = list(range(len(corpus)))
@@ -296,5 +296,5 @@ class llm_retriever_il(object):
             qa_chain = LLMChain(llm = self.llm, prompt = tmp)
 
             seed = qa_chain.run({})
-        
+
         return [corpus[idx] for idx in retrieve_idxs]

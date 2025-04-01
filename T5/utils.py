@@ -14,7 +14,7 @@ def seed_everything(seed):
 
 def inf_encode(model, tokenizer, source_text, source_len, device):
     dataset = dataset_process_inf(source_text, tokenizer, source_len)
-    
+
     params = {
         "batch_size": len(source_text),
         "shuffle": False,
@@ -23,6 +23,8 @@ def inf_encode(model, tokenizer, source_text, source_len, device):
 
     loader = DataLoader(dataset, **params)
 
+    preds = []
+
     with torch.no_grad():
         for _, data in enumerate(loader):
             ids = data['source_ids'].to(device)
@@ -30,16 +32,18 @@ def inf_encode(model, tokenizer, source_text, source_len, device):
 
             generated_ids = model.generate(
               input_ids = ids,
-              attention_mask = mask, 
-              max_length=512, 
+              attention_mask = mask,
+              max_length=512,
               num_beams=2,
-              repetition_penalty=2.5, 
-              length_penalty=1.0, 
+              repetition_penalty=2.5,
+              length_penalty=1.0,
               early_stopping=True
               )
-            
-            preds = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in generated_ids]
+
+            batch_preds = [
+                tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+                for g in generated_ids
+            ]
+            preds.extend(batch_preds)
 
     return preds
-
-
